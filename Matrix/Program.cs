@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -9,9 +11,12 @@ namespace Matrix
 {
     class Program
     {
-        private static Random r = new Random();
+        [DllImport("user32.dll")]
+        public static extern bool ShowWindow(IntPtr hWnd, int cmdShow);
 
-        private static int heigth;
+        private static Random rnd = new Random();
+
+        private static int height;
         private static int width;
         private static int[] y;
 
@@ -22,14 +27,24 @@ namespace Matrix
             // Main loop
             while (true)
             {
-                // 3 Chars (row) at a time (1 bright, 1 dark green and 1 space)
-                for(int x = 0; x < width; ++x)
+                for (int x = 0; x < width; ++x)
                 {
-                    // Bright green char
+                    // White char
                     Console.SetCursorPosition(x, y[x]);
-                    Console.Write((char)r.Next(15, 255));
+                    Console.ForegroundColor = ConsoleColor.White;
+                    Console.Write((char)rnd.Next(15, 255));
 
-                    // Space Char 20 rows above
+                    // Bright green char
+                    Console.ForegroundColor = ConsoleColor.Green;
+                    Console.SetCursorPosition(x, OnScreen(y[x] - 2));
+                    Console.Write((char)rnd.Next(15, 255));
+
+                    // Dark green char
+                    Console.ForegroundColor = ConsoleColor.DarkGreen;
+                    Console.SetCursorPosition(x, OnScreen(y[x] - 6));
+                    Console.Write((char)rnd.Next(15, 255));
+
+                    // Space char 20 rows above
                     Console.SetCursorPosition(x, OnScreen(y[x] - 20));
                     Console.Write(" ");
 
@@ -41,24 +56,25 @@ namespace Matrix
 
         private static int OnScreen(int y)
         {
-            return y < 0 ? y + heigth : y < heigth ? y : 0;
+            return y < 0 ? y + height : y < height ? y : 0;
         }
 
         private static void Init()
         {
+            IntPtr hConsole = Process.GetCurrentProcess().MainWindowHandle;
+            ShowWindow(hConsole, 3); //SW_MAXIMIZE = 3
+
             Console.ForegroundColor = ConsoleColor.Green;
-            Console.WindowHeight = Console.BufferHeight = Console.LargestWindowHeight;
-            Console.WindowWidth = Console.BufferWidth = Console.LargestWindowWidth;
             Console.CursorVisible = false;
 
-            heigth = Console.WindowHeight;
+            height = Console.WindowHeight;
             width = Console.WindowWidth - 1;
             y = new int[width];
 
             // First time init
             for (int i = 0; i < width; i++)
             {
-                y[i] = r.Next(heigth);
+                y[i] = rnd.Next(height);
             }
         }
 
